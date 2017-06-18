@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="me.xm2017.restful.dao">
+
+	<resultMap type="me.predictor.restful.pojo.StockData" id="stockDataResult">
+		<id column="id" property="id"/>
+		<result column="code" property="code"/>
+		<result column="date" property="date"/>
+		<result column="open" property="open"/>
+		<result column="high" property="high"/>
+		<result column="low" property="low"/>
+		<result column="close" property="close"/>
+		<result column="volume" property="volume"/>
+		<result column="money" property="money"/>
+		<result column="traded_market_value" property="traded_market_value"/>
+		<result column="market_value" property="market_value"/>
+		<result column="turnover" property="turnover"/>
+	</resultMap>
+	
+	<insert id="addhis" parameterType="me.predictor.restful.pojo.StockData">
+		INSERT INTO `history`(code,date,open,high,low,close,volume,money,traded_market_value,market_value,turnover) VALUES 
+		(#{code},#{date},#{open},#{high},#{low},#{close},#{volume},#{money},#{traded_market_value},#{market_value},#{turnover})
+	</insert>
+	
+	
+	<update id="updateHistoryYesterdayClose" parameterType="map">
+		UPDATE ${tableName} s1,
+		 (
+			SELECT
+				a.*, b.*
+			FROM
+				(
+					SELECT
+						s1.*, (@rowNumBmA :=@rowNumBmA + 1) AS rowA
+					FROM
+						${tableName} s1,
+						(SELECT(@rowNumBmA := 0)) b
+					WHERE
+						s1.`code` = ${code}
+					ORDER BY
+						s1.date DESC
+				) a
+			LEFT JOIN (
+				SELECT
+					s1.`close` AS price,
+					(@rowNumB :=@rowNumB + 1) AS rowB
+				FROM
+					${tableName} s1,
+					(SELECT(@rowNumB := 0)) b
+				WHERE
+					s1.`code` = ${code}
+				ORDER BY
+					s1.date DESC
+			) b ON a.rowA + 1 = b.rowB
+		) c
+		SET s1.yesterday_close = c.price
+		WHERE
+			s1.date = c.date
+		AND s1.`code` = c. CODE
+		ADN s1.yesterday_close != c.price
+	</update>
+	
+	
+</mapper>
